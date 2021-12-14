@@ -84,6 +84,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
     static final long DELAY_DEALLOCATE_MEMORY_MILLIS = TimeUnit.SECONDS.toMillis(10);
 
     final Settings mSettings;
+    private Locale mLocale;
     private int mOriginalNavBarColor = 0;
     private int mOriginalNavBarFlags = 0;
     final InputLogic mInputLogic = new InputLogic(this /* LatinIME */);
@@ -311,10 +312,10 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
     }
 
     private void loadSettings() {
-        final Locale locale = mRichImm.getCurrentSubtype().getLocaleObject();
+        mLocale = mRichImm.getCurrentSubtype().getLocaleObject();
         final EditorInfo editorInfo = getCurrentInputEditorInfo();
         final InputAttributes inputAttributes = new InputAttributes(editorInfo, isFullscreenMode());
-        mSettings.loadSettings(this, locale, inputAttributes);
+        mSettings.loadSettings(inputAttributes);
         final SettingsValues currentSettingsValues = mSettings.getCurrent();
         AudioAndHapticFeedbackManager.getInstance().onSettingsChanged(currentSettingsValues);
     }
@@ -704,10 +705,14 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
         return mOptionsDialog != null;
     }
 
+    public Locale getCurrentLayoutLocale() {
+        return mLocale;
+    }
+
     @Override
     public void onMovePointer(int steps) {
         if (mInputLogic.mConnection.hasCursorPosition()) {
-            if (TextUtils.getLayoutDirectionFromLocale(mSettings.getCurrent().mLocale) == View.LAYOUT_DIRECTION_RTL)
+            if (TextUtils.getLayoutDirectionFromLocale(getCurrentLayoutLocale()) == View.LAYOUT_DIRECTION_RTL)
                 steps = -steps;
 
             steps = mInputLogic.mConnection.getUnicodeSteps(steps, true);
